@@ -1,0 +1,39 @@
+==CTraps -- A GCC Plugin to instrument shared memory accesses==
+
+CTraps is a gcc plugin and runtime library that inserts calls to runtime
+library functions just before shared memory accesses in parallel/concurrent
+code.
+
+The purpose of this plugin is to expose information about when and how threads
+communicate with one another to programmers for the purpose of debugging and
+performance tuning.  The overhead of the instrumentation and runtime code is
+very low -- often low enough for always-on use in production code.  In a series
+of initial experiments the overhead was 0-10% in many important cases.
+
+The provided runtime implementation has several modes:
+
+1)Collect "last writer slices".  A Last writer slice is a table that shows,
+for each shared memory location in the program that was written, what thread
+and instruction last wrote it.  These are useful when debugging crashes.
+Last writer slices are stored in the program's memory map, so on a crash, 
+the last writer slices are preserved with the core dump.  Last writer slices
+can be collected very efficiently, so they can be collected during production
+runs with extremely low overhead (0-10% in many useful cases).
+
+2)Expose "communication traps".  When exposing communication traps,
+CTraps collects last writer slices.  When an instrumented shared memory
+operation executes, its instrumentation looks at the last writer slice
+for the memory location being accessed.  If the last write was performed
+by a different thread, a special function called a "communication trap handler"
+is called.  Communication trap handlers are registered with the runtime
+at program startup.  A communication trap handler can execute arbitrary code.
+These handlers are only called when threads communicate with one another.  
+Communication is infrequent, so the overhead of these traps 
+is often low enough for use in production code.  The benefit of these traps
+is that a developer can: 1)dynamically profile thread sharing; 2)dynamically
+tune how threads interact to improve performance; 3)identify likely bugs
+manifesting as yet-unseen communication between threads.  There are likely
+many other uses for these traps as well.
+
+=USE=
+Coming soon...
