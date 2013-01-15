@@ -1,6 +1,8 @@
-GXX=${HOME}/cvsandbox/GCC-experimental/inst/bin/g++
-GCC=${HOME}/cvsandbox/GCC-experimental/inst/bin/gcc
+#GXX=${HOME}/cvsandbox/GCC-experimental/inst/bin/g++
+#GCC=${HOME}/cvsandbox/GCC-experimental/inst/bin/gcc
 
+GMPDIR=${HOME}/cvsandbox/GCC-experimental/prereqs/GMP/inst
+GCCSRCDIR=${HOME}/cvsandbox/GCC-experimental/inst/lib/gcc/x86_64-unknown-linux-gnu/4.7.0/../../../..
 #GXX=g++-4.7
 #GCC=gcc-4.7
 
@@ -16,7 +18,7 @@ endif
 
 FOO:= $(shell echo $(UNAME))
 GCCPLUGINS_DIR:= $(shell $(GCC) -print-file-name=plugin)
-CFLAGS+= -I/sampa/home/blucia/cvsandbox/GCC-experimental/prereqs/GMP/inst/include/ -I/sampa/home/blucia/cvsandbox/GCC-experimental/inst/lib/gcc/x86_64-unknown-linux-gnu/4.7.0/../../../../include -I$(GCCPLUGINS_DIR)/include -fPIC -O3 -g $(RDOPTS)
+CFLAGS+= -I${GMPDIR}/include/ -I${GCCSRCDIR}/include -I$(GCCPLUGINS_DIR)/include -fPIC -O3 -g $(RDOPTS)
 
 LDFLAGS+= -shared 
 

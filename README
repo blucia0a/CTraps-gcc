@@ -52,5 +52,82 @@ tune how threads interact to improve performance; 3)identify likely bugs
 manifesting as yet-unseen communication between threads.  There are likely
 many other uses for these traps as well.
 
-=USE=
-Coming soon...
+=BUILDING=
+To build, you should configure the paths in the Compiler/Makefile and
+Runtime/Makefile.  The important ones are the pointers to the GCC include dir
+and the GMP include dir (in the Compiler/Makefile). 
+
+There are some configurable build parameters for the Compiler and for the Runtime.
+
+For the compiler:
+There are three build configurations.  Each build configuration inserts
+instrumentation at different points in the program.  Which configuration gets
+built is determined by setting "RDTYPE" in the environment when you run make. (i.e., "RDTYPE=<value> make" in CTraps-gcc/Compiler). RDTYPE can take four different values:
+
+if RDTYPE is undefined:
+   Instrumentation calls are inserted at all read and write operations. 
+
+if RDTYPE=WRITEONLY:
+   Instrumentation calls are inserted at write operations only.  This mode collects last
+   last writer slices, but does not support instrumentation on reads.
+
+if RDTYPE=DOMOPT:
+   Instrumentation calls are inserted at all write operations and all read
+   operations except those that are dominated in the control flow graph by other
+   points that are instrumented.
+
+if RDTYPE=SLCOPT:
+   Instrumentation calls are inserted at all write operations and all read 
+   operations except those that are in straight line code sequences with 
+   other points that are instrumented.
+
+There are also several build configurations for the Runtime.  These are
+controlled by a series of #defines at the top of CTraps-gcc/Runtime/RWCalls.cpp.  
+Each different configuration enables different runtime features.
+
+-PLUGIN-
+This #define enables use of the plugin framework in the runtime.  That means you
+can build a plugin (see the README in CTraps-gcc/Runtime/Plugins), load it, and
+it will be called when instrumented memory operations communicate.  
+
+-SAMPLING-
+Sampling should not be used.
+
+-COMMGRAPH-
+Comm graph collects a communication graph that records, for each read and write
+to a shared location, what the accessing instruction, and the last writer are.
+The results are stored in a file when the program ends.  The file to store the
+graph in is specified via the CG_GRAPH environment variable.  The communication
+graph is useful for debugging (as with an automated debugging methodology like
+http://recon.cs.washington.edu).  The communication graph may also be useful
+for understanding program structure and performance tuning.
+
+-RRRW-
+RRRW traces, for each read and write to shared memory, the previous access to that location.  If an operation's previous access was in a different thread, the current operation is recorded.  The trace of such accesses reveals which parts of the program access data shared by multiple threads.  This is useful for performance tuning and debugging.
+
+-SLCOPTEXC-
+This flag is for debugging CTraps and is not important.
+
+
+=INSTRUMENTING YOUR PROGRAM=
+
+To enable instrumentation of shared memory accesses, add the following flag to
+your compilation command line:
+
+-fplugin=<install path>/RWInst.so
+
+where <install path> is the path where you built the CTraps compiler support
+(e.g., ${HOME}/CTraps-gcc/Compiler).
+
+Doing that will insert a call to MemRead(void *addr) before instrumented reads and will insert a call to MemWrite(void *addr) before instrumented writes. 
+
+=RUNNING YOUR INSTRUMENTED PROGRAM=
+Be sure the runtime is built with the options you wanted.  Also be sure that
+CTraps-gcc/Runtime/libRWCalls.so is in your LD_LIBRARY_PATH.  If those two things
+are true, you should be able to run your program like normal and CTraps should make its instrumentation calls.
+
+-Using Plugins-
+A plugin to CTraps to be loaded is specified via the CTRAP_PLUGIN environment
+variable.  Plugins must expose the interface specified in
+CTraps-gcc/Runtime/ct_plugin.h.  See the readme in the plugins section for more
+information on how to write your own CTraps plugin.

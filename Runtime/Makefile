@@ -1,5 +1,5 @@
-GXX=${HOME}/cvsandbox/GCC-experimental/inst/bin/g++
-GCC=${HOME}/cvsandbox/GCC-experimental/inst/bin/gcc
+#GXX=${HOME}/cvsandbox/GCC-experimental/inst/bin/g++
+#GCC=${HOME}/cvsandbox/GCC-experimental/inst/bin/gcc
 
 CFLAGS+= -fPIC -O3  -pthread  -I${HOME}/cvsandbox/GCC-experimental/inst/include  -Wno-deprecated
 CXXFLAGS+= -fPIC -O3  -pthread -std=c++11 -I${HOME}/cvsandbox/GCC-experimental/inst/include -Wno-deprecated
