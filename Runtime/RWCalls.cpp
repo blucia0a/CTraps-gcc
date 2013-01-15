@@ -1,3 +1,22 @@
+/*
+==CTraps -- A GCC Plugin to instrument shared memory accesses==
+ 
+    Copyright (C) 2012 Brandon Lucia
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -148,25 +167,20 @@ void *sampleTimer(void*v){
   samplingOn = false;
   while(true){
 
-    //fprintf(stderr,"WAITING ON THE NEXT SAMPLE PERIOD - %lu quanta\n",quanta);
     /*Non-Sampling Period*/
     usleep(NON_SAMPLE_PERIOD);
 
-    //fprintf(stderr,"STARTING A SAMPLE PERIOD\n");
     /*Sample Generation is ordered by samplingOn's fence*/
     unsigned long t = sampleGeneration.load(memory_order_acquire);
     sampleGeneration.store(t + 1, memory_order_release);
     samplingOn.store(true, memory_order_release);
 
     /*Non-Sampling Period*/
-    //fprintf(stderr,"Entring while sampling loop\n");
     while( samplingOn.load(memory_order_acquire) ){
     
-      //fprintf(stderr,"Spinning in while sampling loop\n");
       usleep(SAMPLE_QUANTUM); 
 
     }
-    //fprintf(stderr,"SAMPLE PERIOD OVER\n");
 
   }
 
@@ -220,7 +234,6 @@ static void init(){
   sigfillset(&sigs);
   pthread_sigmask(SIG_BLOCK,&sigs,&olds);
   #if defined(SAMPLING) 
-  //fprintf(stderr,"Starting sampling thread\n");
   __call_real_pthread_create(&samplingThread,NULL,sampleTimer,NULL);
   #endif
   pthread_sigmask(SIG_SETMASK,&olds,NULL);
@@ -302,8 +315,6 @@ void MemRead(void *addr){
     #endif
     #endif
 
-    //unsigned long selfThd = (unsigned long)pthread_self(); 
-  
     unsigned long index =  ((unsigned long)addr) & ((unsigned long)LWT_SIZE);
 
     #ifdef USE_ATOMICS
@@ -312,7 +323,6 @@ void MemRead(void *addr){
     LWT_Entry e = LWT_table[index];
     #endif
  
-    //unsigned long me = ((unsigned long)0xffff) & selfThd; 
     unsigned long you = (e & ((unsigned long)0xffff000000000000));
 
     #if defined(RRRW)
@@ -424,7 +434,6 @@ void MemWrite(void *addr){
   unsigned long newe = ( who | where );
 
   #if defined(PLUGIN) || defined(RRRW) || defined(COMMGRAPH) 
-  //unsigned long me = ((unsigned long)0xffff) & selfThd; 
   unsigned long you = (e & ((unsigned long)0xffff000000000000));
   if( myTid != you ){
       

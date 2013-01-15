@@ -1,7 +1,7 @@
 GXX=${HOME}/cvsandbox/GCC-experimental/inst/bin/g++
 GCC=${HOME}/cvsandbox/GCC-experimental/inst/bin/gcc
 
-CTRAPSHOME=/sampa/home/blucia/cvsandbox/CommGraph/Runtime
+CTRAPSHOME=${HOME}/cvsandbox/CommGraph/Runtime
 
 CFLAGS+= -fPIC -O3 -g -pthread  -I${HOME}/cvsandbox/GCC-experimental/inst/include  -I${CTRAPSHOME} -Wno-deprecated
 CXXFLAGS+= -fPIC -O3 -g -pthread -std=c++11 -I${HOME}/cvsandbox/GCC-experimental/inst/include  -I${CTRAPSHOME} -Wno-deprecated
