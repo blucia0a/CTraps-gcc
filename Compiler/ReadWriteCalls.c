@@ -504,6 +504,11 @@ void get_offset_and_base(tree expr, tree *offset, tree *base){
 
       get_offset_and_base(ref_base, offset, base);
 
+  }
+  else if( TREE_CODE(ref_base) == MEM_REF ){
+    /*Base Case!  We have a base value here!*/
+    *base = get_base(ref_base);
+    *offset = TREE_OPERAND(ref_base, 1);
   }else{
     
     /*Base Case!  We have a base value here!*/
@@ -564,7 +569,7 @@ void get_offset_and_base(tree expr, tree *offset, tree *base){
 void insert_rd_comp_ref(tree expr, gimple stmt, basic_block bb, gimple_stmt_iterator *gsi){
 
   tree offset = NULL;
-  tree base = NULL; 
+  tree base = NULL;
 
   get_offset_and_base(expr, &offset, &base);
 
@@ -583,7 +588,7 @@ void insert_rd_comp_ref(tree expr, gimple stmt, basic_block bb, gimple_stmt_iter
 void insert_rd_arr_ref(tree expr, gimple stmt, basic_block bb, gimple_stmt_iterator *gsi){
   
   tree offset = NULL;
-  tree base = NULL; 
+  tree base = NULL;
 
   tree ref_base = TREE_OPERAND(expr,0);
   if( TREE_CODE(ref_base) == STRING_CST ){ return; }
@@ -604,14 +609,15 @@ void insert_rd_arr_ref(tree expr, gimple stmt, basic_block bb, gimple_stmt_itera
 /*Handle a read in an MEM_REF tree*/
 void insert_rd_mem_ref(tree expr, gimple stmt, basic_block bb, gimple_stmt_iterator *gsi){
 
-  /*expr is a MEM_REF*/  
-  tree ptr = TREE_OPERAND(expr,0);
+  tree base = TREE_OPERAND(expr, 0);
+  tree offset = TREE_OPERAND(expr, 1);
 
-  /*ptr is an SSA_NAME*/
-  if( can_escape( ptr ) ){
+  tree final_addr = fold_build_pointer_plus(base, offset);
+
+  if( can_escape( base ) ){
 
     bool hoisted = false;
-    insert_rd(ptr,bb,gsi,&hoisted);
+    insert_rd(final_addr,bb,gsi,&hoisted);
 
   } 
  
@@ -639,7 +645,7 @@ void insert_wr_comp_ref(tree expr, gimple stmt, basic_block bb, gimple_stmt_iter
 void insert_wr_arr_ref(tree expr, gimple stmt, basic_block bb, gimple_stmt_iterator *gsi){
   
   tree offset = NULL;
-  tree base = NULL; 
+  tree base = NULL;
 
   tree ref_base = TREE_OPERAND(expr,0);
   if( TREE_CODE(ref_base) == STRING_CST ){ return; }
@@ -659,13 +665,14 @@ void insert_wr_arr_ref(tree expr, gimple stmt, basic_block bb, gimple_stmt_itera
 /*Handle a write in an MEM_REF tree*/
 void insert_wr_mem_ref(tree expr, gimple stmt, basic_block bb, gimple_stmt_iterator *gsi){
   
-  /*expr is a MEM_REF*/  
-  tree ptr = TREE_OPERAND(expr,0);
+  tree base = TREE_OPERAND(expr, 0);
+  tree offset = TREE_OPERAND(expr, 1);
 
-  /*ptr is an SSA_NAME*/
-  if( can_escape( ptr ) ){
+  tree final_addr = fold_build_pointer_plus(base, offset);
 
-    insert_wr(ptr,bb,gsi);
+  if( can_escape( base ) ){
+
+    insert_wr(final_addr,bb,gsi);
 
   } 
 
