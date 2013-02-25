@@ -846,7 +846,8 @@ void my_insert_rd_wr(basic_block bb, gimple_stmt_iterator *gsi){
   if( gimple_has_mem_ops( stmt ) && 
       gimple_code(stmt) != GIMPLE_ASSIGN  && 
       gimple_code(stmt) != GIMPLE_RETURN  && 
-      gimple_code(stmt) != GIMPLE_CALL){
+      gimple_code(stmt) != GIMPLE_CALL &&
+      gimple_code(stmt) != GIMPLE_ASM){
 
     fprintf(stderr,"Has MemOps we won't be touching...\n");
     fprintf(stderr,"Code=%s\n",gimple_code_name[ gimple_code(stmt) ]);
@@ -867,6 +868,9 @@ void my_insert_rd_wr(basic_block bb, gimple_stmt_iterator *gsi){
 
     insert_for_return(bb, gsi);
 
+  } else if( gimple_code(stmt) == GIMPLE_ASM){
+    /* Not much to do for ASM memory clobber statements. */
+    (void)0;
   }
 
 }
