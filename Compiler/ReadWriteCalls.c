@@ -362,7 +362,7 @@ bool try_insert_rd_off_loop( tree expr, basic_block bb, gimple_stmt_iterator *gs
       print_node(stderr,"\n\nTrying to make it work with a loop doodly\n\n",expr,0);
       gimple stmt = gsi_stmt(*gsi);
       fprintf(stderr,"The statement is: \n");
-      print_gimple_stmt(stderr,stmt,0,0);
+      //print_gimple_stmt(stderr,stmt,0,0);
 
       fprintf(stderr,"Getting loop...\n");
       if( lo != NULL ){
@@ -557,7 +557,7 @@ void get_offset_and_base(tree expr, tree *offset, tree *base){
     
   }else{
 
-    print_node(stderr,"\n\n--------------------OFFSET TYPE ERROR ---------------\n\n",expr,0);
+    //print_node(stderr,"\n\n--------------------OFFSET TYPE ERROR ---------------\n\n",expr,0);
 
   }
 
@@ -716,7 +716,7 @@ void handle_read_ref(tree ref, gimple stmt, basic_block bb, gimple_stmt_iterator
           !TREE_CONSTANT(ref) &&
           TREE_CODE(ref) != ADDR_EXPR ){ 
 
-        print_node(stderr,"\n\n--------------------UNHANDLED ASSIGN RHS---------------\n\n",ref,0);
+        //print_node(stderr,"\n\n--------------------UNHANDLED ASSIGN RHS---------------\n\n",ref,0);
 
       }
 
@@ -759,7 +759,7 @@ void handle_write_ref(tree ref, gimple stmt, basic_block bb, gimple_stmt_iterato
         TREE_CODE(ref) != SSA_NAME &&
         TREE_CODE(ref) != ADDR_EXPR ){ 
 
-      print_node(stderr,"\n\n--------------------UNHANDLED ASSIGN LHS---------------\n\n",ref,0);
+      //print_node(stderr,"\n\n--------------------UNHANDLED ASSIGN LHS---------------\n\n",ref,0);
 
     }
 
@@ -774,11 +774,11 @@ void insert_for_assign(basic_block bb, gimple_stmt_iterator *gsi){
   if( gimple_assign_rhs_class(stmt) == GIMPLE_SINGLE_RHS){
   
     tree rhs_full = gimple_assign_rhs1 (stmt); 
-   
+
     handle_read_ref(rhs_full,stmt,bb,gsi); 
   
     tree lhs_full = gimple_assign_lhs (stmt); 
-    
+
     handle_write_ref(lhs_full,stmt,bb,gsi); 
 
   }
@@ -818,7 +818,7 @@ void insert_for_call(basic_block bb, gimple_stmt_iterator *gsi){
         if( TREE_CODE(arg) == SSA_NAME ){
           insert_wr( arg, bb, gsi );
         }else{
-          print_node(stderr,"\n\n--------------------UNHANDLED DEALLOCATION ARGUMENT---------------\n\n",arg,0);
+          //print_node(stderr,"\n\n--------------------UNHANDLED DEALLOCATION ARGUMENT---------------\n\n",arg,0);
         }
 
       }
@@ -856,9 +856,9 @@ void my_insert_rd_wr(basic_block bb, gimple_stmt_iterator *gsi){
       gimple_code(stmt) != GIMPLE_CALL &&
       gimple_code(stmt) != GIMPLE_ASM){
 
-    fprintf(stderr,"Has MemOps we won't be touching...\n");
-    fprintf(stderr,"Code=%s\n",gimple_code_name[ gimple_code(stmt) ]);
-    print_gimple_stmt(stderr,stmt,0,0);
+    //fprintf(stderr,"Has MemOps we won't be touching...\n");
+    //fprintf(stderr,"Code=%s\n",gimple_code_name[ gimple_code(stmt) ]);
+    //print_gimple_stmt(stderr,stmt,0,0);
     
 
   }

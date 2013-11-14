@@ -29,8 +29,8 @@
 #include <atomic>
 
 #undef USE_ATOMICS
-#define LWT_SIZE 0xfffffff
-#define LWT_ENTRIES 0x10000000
+#define LWT_SIZE 0xffffff
+#define LWT_ENTRIES 0x1000000
 
 #ifdef USE_ATOMICS
 typedef std::atomic<unsigned long> LWT_Entry;
@@ -38,7 +38,9 @@ typedef std::atomic<unsigned long> LWT_Entry;
 typedef unsigned long LWT_Entry;
 #endif
 
+extern "C"{
 static LWT_Entry *LWT_table;
+}
 
 pthread_mutex_t last_writer_lock;
 

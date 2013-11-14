@@ -31,7 +31,7 @@
 #include <cfgloop.h>
 
 int plugin_is_GPL_compatible = 1;
-
+extern void init_new_func();
 /* Help info about the plugin if one were to use gcc's --version --help */
 static struct plugin_info RWInst_info =
 {
@@ -40,11 +40,12 @@ static struct plugin_info RWInst_info =
 };
 
 
-static struct plugin_gcc_version RWInst_ver =
+static struct plugin_gcc_version RWInst_ver = 
 {
-    .basever = "4.7",
-};
 
+  .basever = "4.7",
+
+};
 
 /* We don't need to run any tests before we execute our plugin pass */
 static bool RWInst_gate(void)
@@ -78,7 +79,7 @@ static unsigned RWInst_exec(void)
     
     FOR_EACH_BB(bb)
       for (gsi=gsi_start_bb(bb); !gsi_end_p(gsi); gsi_next(&gsi)) {
-
+         
           my_insert_rd_wr(bb, &gsi);
 
       }
@@ -88,13 +89,13 @@ static unsigned RWInst_exec(void)
 
 
 /* See tree-pass.h for a list and desctiptions for the fields of this struct */
-static struct gimple_opt_pass RWInst_pass = 
-{
+static struct gimple_opt_pass RWInst_pass;// = 
+/*{
     .pass.type = GIMPLE_PASS,
-    .pass.name = "RWInst",       /* For use in the dump file */
+    .pass.name = "RWInst",       // For use in the dump file 
     .pass.gate = RWInst_gate,
-    .pass.execute = RWInst_exec, /* Pass handler/callback */
-};
+    .pass.execute = RWInst_exec, // Pass handler/callback 
+};*/
 
 
 
@@ -102,6 +103,13 @@ static struct gimple_opt_pass RWInst_pass =
 int plugin_init(struct plugin_name_args   *info,  /* Argument infor */
                 struct plugin_gcc_version *ver)   /* Version of GCC */
 {
+
+
+    RWInst_pass.pass.type = GIMPLE_PASS;
+    RWInst_pass.pass.name = "RWInst";       // For use in the dump file 
+    RWInst_pass.pass.gate = RWInst_gate;
+    RWInst_pass.pass.execute = RWInst_exec; // Pass handler/callback 
+
     struct register_pass_info pass;
 
     if (strncmp(ver->basever, RWInst_ver.basever, strlen("4.7")))

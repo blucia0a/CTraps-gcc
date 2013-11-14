@@ -216,8 +216,10 @@ static void init(){
   cciprev = new std::set<unsigned long>();
   #endif
 
-  myTid = 0;
   nexttid = 1;
+  myTid = (nexttid << 48) & 0xffff000000000000;
+  nexttid++;
+
   pthread_mutex_init(&tidLock,NULL);
 
   #ifdef USE_ATOMICS
@@ -384,7 +386,7 @@ void MemRead(void *addr){
 
 extern "C"{
 void MemWrite(void *addr){
-  
+
   #if defined(SAMPLING)
   if( !samplingOn.load(memory_order_acquire) ){
   /*Not in a sampling period*/
