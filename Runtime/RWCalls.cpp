@@ -222,6 +222,10 @@ static void init(){
 
   pthread_mutex_init(&tidLock,NULL);
 
+  #ifdef EVAL_TRACKMEMSIZE
+  pthread_mutex_init(&mset_lock,NULL);
+  #endif
+
   #ifdef USE_ATOMICS
   LWT_table = new LWT_Entry[LWT_ENTRIES]; 
   #else
@@ -268,6 +272,10 @@ static void deinit(){
   
   #if defined(SLCOPTEXC)
   fprintf(stderr,"Dom %lu %lu\n",num_reads,num_gone_reads);
+  #endif
+
+  #ifdef EVAL_TRACKMEMSIZE
+  fprintf(stderr,"memsize %lu\n",MSet.size());
   #endif
 
 }
@@ -461,6 +469,12 @@ void MemWrite(void *addr){
   LWT_table[index].store(newe, memory_order_relaxed );
   #else
   LWT_table[ index ] = newe;
+  #endif
+
+  #ifdef EVAL_TRACKMEMSIZE
+  pthread_mutex_lock(&mset_lock);
+  MSet.insert( (unsigned long)addr );
+  pthread_mutex_unlock(&mset_lock);
   #endif
 
 }

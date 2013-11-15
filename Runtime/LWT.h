@@ -27,15 +27,23 @@
 
 #include <pthread.h>
 #include <atomic>
+#include <set>
 
 #undef USE_ATOMICS
 #define LWT_SIZE 0xffffff
 #define LWT_ENTRIES 0x1000000
 
+
 #ifdef USE_ATOMICS
 typedef std::atomic<unsigned long> LWT_Entry;
 #else
 typedef unsigned long LWT_Entry;
+#endif
+
+#define EVAL_TRACKMEMSIZE
+#ifdef EVAL_TRACKMEMSIZE
+std::set<unsigned long> MSet;
+pthread_mutex_t mset_lock;
 #endif
 
 extern "C"{
