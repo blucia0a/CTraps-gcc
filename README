@@ -1,5 +1,5 @@
 /*
-==CTraps -- A GCC Plugin to instrument shared memory accesses==
+==Last Writer Slices & CTraps -- A GCC plugin and runtime system to track data provenance and interpose on shared data accesses==
     
     Copyright (C) 2012 Brandon Lucia 
 
@@ -17,15 +17,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-CTraps is a gcc plugin and runtime library that inserts calls to runtime
-library functions just before shared memory accesses in parallel/concurrent
-code.
+Last writer slices and CTraps (collectively "CTraps", for short) is a gcc
+plugin and runtime library that inserts calls to runtime library functions just
+before shared memory accesses in parallel/concurrent code.
 
 The purpose of this plugin is to expose information about when and how threads
-communicate with one another to programmers for the purpose of debugging and
-performance tuning.  The overhead of the instrumentation and runtime code is
+communicate with one another to programmers for debugging and program
+analysis.  The overhead of the instrumentation and runtime code is
 very low -- often low enough for always-on use in production code.  In a series
-of initial experiments the overhead was 0-10% in many important cases.
+of initial experiments the overhead was 0-10% in several widely used server programs.
 
 The provided runtime implementation has several modes:
 
@@ -54,22 +54,25 @@ many other uses for these traps as well.
 
 =BUILDING=
 To build, you should configure the paths in the Compiler/Makefile and
-Runtime/Makefile.  The important ones are the pointers to the GCC include dir
-and the GMP include dir (in the Compiler/Makefile). 
+Runtime/Makefile.  
 
-There are some configurable build parameters for the Compiler and for the Runtime.
+There are some configurable build parameters for the Compiler and for the
+Runtime.
 
 For the compiler:
 There are three build configurations.  Each build configuration inserts
 instrumentation at different points in the program.  Which configuration gets
-built is determined by setting "RDTYPE" in the environment when you run make. (i.e., "RDTYPE=<value> make" in CTraps-gcc/Compiler). RDTYPE can take four different values:
+built is determined by setting "RDTYPE" in the environment when you run make.
+(i.e., "RDTYPE=<value> make" in CTraps-gcc/Compiler). RDTYPE can take four
+different values:
 
 if RDTYPE is undefined:
    Instrumentation calls are inserted at all read and write operations. 
 
 if RDTYPE=WRITEONLY:
-   Instrumentation calls are inserted at write operations only.  This mode collects last
-   last writer slices, but does not support instrumentation on reads.
+   Instrumentation calls are inserted at write operations only.  This mode
+   collects last last writer slices, but does not support instrumentation on
+   reads.
 
 if RDTYPE=DOMOPT:
    Instrumentation calls are inserted at all write operations and all read
@@ -119,12 +122,16 @@ your compilation command line:
 where <install path> is the path where you built the CTraps compiler support
 (e.g., ${HOME}/CTraps-gcc/Compiler).
 
-Doing that will insert a call to MemRead(void *addr) before instrumented reads and will insert a call to MemWrite(void *addr) before instrumented writes. 
+Doing that will insert a call to MemRead(void *addr) before instrumented reads
+and will insert a call to MemWrite(void *addr) before instrumented writes. Note
+that if you've used RDTYPE=WRITEONLY, the compiler will only insert MemWrite
+calls.
 
 =RUNNING YOUR INSTRUMENTED PROGRAM=
 Be sure the runtime is built with the options you wanted.  Also be sure that
-CTraps-gcc/Runtime/libRWCalls.so is in your LD_LIBRARY_PATH.  If those two things
-are true, you should be able to run your program like normal and CTraps should make its instrumentation calls.
+CTraps-gcc/Runtime/libRWCalls.so is in your LD_LIBRARY_PATH.  If those two
+things are true, you should be able to run your program like normal and CTraps
+should make its instrumentation calls.
 
 -Using Plugins-
 A plugin to CTraps to be loaded is specified via the CTRAP_PLUGIN environment
