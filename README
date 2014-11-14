@@ -15,6 +15,10 @@ CTraps for GCC-4.8, as published at CGO 2015.
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+The accepted version of this paper is in this repository as ``paper.pdf''.
+This is not the camera-ready version, but rather the accepted version with
+author names added.
+
 Build instructions for CGO Artifact Evaluation
 -----------------------------------------------
 
