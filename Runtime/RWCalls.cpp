@@ -36,6 +36,7 @@
 #undef PLUGIN
 #undef RRRW
 #undef SLCOPTEXC
+#define ARTIFACTEVAL
 
 using namespace std;
 
@@ -464,7 +465,11 @@ void MemWrite(void *addr){
     
   }
   #endif
-  
+ 
+  #ifdef ARTIFACTEVAL
+  fprintf(stderr,"LWT[%x]= (Thd 0x%x, PC 0x%x)\n",addr,pthread_self(),pc);
+  #endif
+
   #ifdef USE_ATOMICS 
   LWT_table[index].store(newe, memory_order_relaxed );
   #else

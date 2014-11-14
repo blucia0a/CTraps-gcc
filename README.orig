@@ -1,7 +1,7 @@
 /*
 ==Last Writer Slices & CTraps -- A GCC plugin and runtime system to track data provenance and interpose on shared data accesses==
     
-    Copyright (C) 2012 Brandon Lucia 
+    Copyright (C) 2012-2014 Brandon Lucia blucia@cmu.edu
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

@@ -1,10 +1,7 @@
-#GXX=${HOME}/cvsandbox/GCC-experimental/inst/bin/g++
-#GCC=${HOME}/cvsandbox/GCC-experimental/inst/bin/gcc
-
-#GMPDIR=${HOME}/cvsandbox/GCC-experimental/prereqs/GMP/inst
-#GCCSRCDIR=${HOME}/cvsandbox/GCC-experimental/inst/lib/gcc/x86_64-unknown-linux-gnu/4.7.0/../../../..
-GCC=gcc-4.7
-GXX=g++-4.7
+GCC=gcc-4.8
+GXX=g++-4.8
+LIBIBERTYDIR=$(shell brew --prefix)/lib/x86_64
+GMPDIR=$(shell brew --prefix)/Cellar/gmp4/4.3.2
 
 UNAME:= $(shell uname -s)
 
@@ -36,7 +33,7 @@ RWInst.o: RWInst.c
 	$(GXX) $(CFLAGS) -c $^ -o $@
 
 RWInst.so: RWInst.o $(RWCALLSBIN) 
-	$(GXX) $(CFLAGS) $(LDFLAGS) $^ -o $@
+	$(GXX) -undefined dynamic_lookup $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 clean:
 	-rm ReadWriteCalls.c.o RWInst.so RWInst.o

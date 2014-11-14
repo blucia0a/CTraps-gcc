@@ -26,8 +26,11 @@ system, such as how to build plugins (i.e., CTraps), and a few other features.
 For a basic artifact evaluation, the most important component is the LWS
 runtime described here.
 
-This package was built and tested on OS X Mavericks, with homebrew installed.  To build the project,
-there are a few prerequisites.
+This package was built and tested on OS X Mavericks, with homebrew installed.  First, clone the project from github:
+
+0)$>git clone git@github.com:blucia0a/CTraps-gcc.git
+
+To build the cloned project, there are a few prerequisites.
 
 1)Install homebrew (http://brew.sh/)
 2)$>brew install gcc48

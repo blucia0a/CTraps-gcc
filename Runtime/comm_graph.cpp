@@ -43,8 +43,8 @@ void dumpCommunicationGraph(){
 
   if(p){
 
-    char *s = (char *)malloc(sizeof(char) * strlen(p) + strlen(program_invocation_short_name) + 18);
-    sprintf(s,"%s%s%lx",p,program_invocation_short_name,(unsigned long)pthread_self());
+    char *s = (char *)malloc(sizeof(char) * strlen(p) + strlen("executable") + 18);
+    sprintf(s,"%s%s%lx",p,"executable",(unsigned long)pthread_self());
     ofstream fs(s); 
     //__gnu_cxx::hash_map<unsigned long, __gnu_cxx::hash_map< unsigned long, unsigned long> >::iterator ct_iter, ct_end;
     for( auto ct_iter = communication_table->begin(), ct_end = communication_table->end(); ct_iter != ct_end; ct_iter++ ){

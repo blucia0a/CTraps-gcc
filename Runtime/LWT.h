@@ -40,7 +40,7 @@ typedef std::atomic<unsigned long> LWT_Entry;
 typedef unsigned long LWT_Entry;
 #endif
 
-#define EVAL_TRACKMEMSIZE
+#undef EVAL_TRACKMEMSIZE
 #ifdef EVAL_TRACKMEMSIZE
 std::set<unsigned long> MSet;
 pthread_mutex_t mset_lock;

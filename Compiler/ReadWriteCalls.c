@@ -315,7 +315,7 @@ void insert_rd( tree expr, basic_block bb, gimple_stmt_iterator *gsi, bool *hois
                            Rd_decl_node, 
                            Rd_call, 
                            compute_call_stmt_bb_frequency(current_function_decl, bb), 
-                           bb->loop_depth);
+                           bb_loop_depth(bb));
       }
 
       #endif
@@ -346,7 +346,7 @@ void insert_rd( tree expr, basic_block bb, gimple_stmt_iterator *gsi, bool *hois
                          Rd_decl_node, 
                          Rd_call, 
                          compute_call_stmt_bb_frequency(current_function_decl, bb), 
-                         bb->loop_depth);
+                         bb_loop_depth(bb));
     }
 
 #endif
@@ -443,7 +443,7 @@ void insert_wr( tree expr, basic_block bb, gimple_stmt_iterator *gsi ){
                      Wr_decl_node, 
                      Wr_call, 
                      compute_call_stmt_bb_frequency(current_function_decl, bb), 
-                     bb->loop_depth);
+                     bb_loop_depth(bb));
   }
 
 }

@@ -43,7 +43,7 @@ static struct plugin_info RWInst_info =
 static struct plugin_gcc_version RWInst_ver = 
 {
 
-  .basever = "4.7",
+  .basever = "4.8",
 
 };
 
@@ -71,8 +71,9 @@ static unsigned RWInst_exec(void)
     number_total = 0;
     init_new_func();
 
-    struct loops loo;
-    int numloops = flow_loops_find(&loo);
+    //struct loops loo;
+    //struct loops *outloo;
+    //outloo = flow_loops_find(&loo);
 
     calculate_dominance_info(CDI_DOMINATORS);
     calculate_dominance_info(CDI_POST_DOMINATORS);
@@ -112,7 +113,7 @@ int plugin_init(struct plugin_name_args   *info,  /* Argument infor */
 
     struct register_pass_info pass;
 
-    if (strncmp(ver->basever, RWInst_ver.basever, strlen("4.7")))
+    if (strncmp(ver->basever, RWInst_ver.basever, strlen("4.8")))
        return -1; /* Incorrect version of gcc */
 
     pass.pass = &RWInst_pass.pass;

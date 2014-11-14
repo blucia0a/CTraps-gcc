@@ -1,10 +1,10 @@
-GXX=g++-4.7
-GCC=gcc-4.7
+GXX=g++-4.8
+GCC=gcc-4.8
 
-CFLAGS+= -g -fPIC -O3  -pthread  -I${HOME}/cvsandbox/GCC-experimental/inst/include  -Wno-deprecated
-CXXFLAGS+= -g -fPIC -O3  -pthread -std=c++11 -I${HOME}/cvsandbox/GCC-experimental/inst/include -Wno-deprecated
+CFLAGS+= -g -fPIC -O3  -pthread  -Wno-deprecated
+CXXFLAGS+= -g -fPIC -O3  -pthread -std=c++11 -Wno-deprecated
 
-LDFLAGS+= -shared -std=c++11 -lpthread -L${HOME}/cvsandbox/GCC-experimental/inst/lib -L${HOME}/cvsandbox/GCC-experimental/inst/lib64 -L${HOME}/cvsandbox/GCC-experimental/inst/libexec -ldl
+LDFLAGS+= -shared -std=c++11 -lpthread -ldl
 
 all: libRWCalls.so
 
