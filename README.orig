@@ -1,0 +1,140 @@
+/*
+==Last Writer Slices & CTraps -- A GCC plugin and runtime system to track data provenance and interpose on shared data accesses==
+    
+    Copyright (C) 2012 Brandon Lucia 
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+Last writer slices and CTraps (collectively "CTraps", for short) is a gcc
+plugin and runtime library that inserts calls to runtime library functions just
+before shared memory accesses in parallel/concurrent code.
+
+The purpose of this plugin is to expose information about when and how threads
+communicate with one another to programmers for debugging and program
+analysis.  The overhead of the instrumentation and runtime code is
+very low -- often low enough for always-on use in production code.  In a series
+of initial experiments the overhead was 0-10% in several widely used server programs.
+
+The provided runtime implementation has several modes:
+
+1)Collect "last writer slices".  A Last writer slice is a table that shows,
+for each shared memory location in the program that was written, what thread
+and instruction last wrote it.  These are useful when debugging crashes.
+Last writer slices are stored in the program's memory map, so on a crash, 
+the last writer slices are preserved with the core dump.  Last writer slices
+can be collected very efficiently, so they can be collected during production
+runs with extremely low overhead (0-10% in many useful cases).
+
+2)Expose "communication traps".  When exposing communication traps,
+CTraps collects last writer slices.  When an instrumented shared memory
+operation executes, its instrumentation looks at the last writer slice
+for the memory location being accessed.  If the last write was performed
+by a different thread, a special function called a "communication trap handler"
+is called.  Communication trap handlers are registered with the runtime
+at program startup.  A communication trap handler can execute arbitrary code.
+These handlers are only called when threads communicate with one another.  
+Communication is infrequent, so the overhead of these traps 
+is often low enough for use in production code.  The benefit of these traps
+is that a developer can: 1)dynamically profile thread sharing; 2)dynamically
+tune how threads interact to improve performance; 3)identify likely bugs
+manifesting as yet-unseen communication between threads.  There are likely
+many other uses for these traps as well.
+
+=BUILDING=
+To build, you should configure the paths in the Compiler/Makefile and
+Runtime/Makefile.  
+
+There are some configurable build parameters for the Compiler and for the
+Runtime.
+
+For the compiler:
+There are three build configurations.  Each build configuration inserts
+instrumentation at different points in the program.  Which configuration gets
+built is determined by setting "RDTYPE" in the environment when you run make.
+(i.e., "RDTYPE=<value> make" in CTraps-gcc/Compiler). RDTYPE can take four
+different values:
+
+if RDTYPE is undefined:
+   Instrumentation calls are inserted at all read and write operations. 
+
+if RDTYPE=WRITEONLY:
+   Instrumentation calls are inserted at write operations only.  This mode
+   collects last last writer slices, but does not support instrumentation on
+   reads.
+
+if RDTYPE=DOMOPT:
+   Instrumentation calls are inserted at all write operations and all read
+   operations except those that are dominated in the control flow graph by other
+   points that are instrumented.
+
+if RDTYPE=SLCOPT:
+   Instrumentation calls are inserted at all write operations and all read 
+   operations except those that are in straight line code sequences with 
+   other points that are instrumented.
+
+There are also several build configurations for the Runtime.  These are
+controlled by a series of #defines at the top of CTraps-gcc/Runtime/RWCalls.cpp.  
+Each different configuration enables different runtime features.
+
+-PLUGIN-
+This #define enables use of the plugin framework in the runtime.  That means you
+can build a plugin (see the README in CTraps-gcc/Runtime/Plugins), load it, and
+it will be called when instrumented memory operations communicate.  
+
+-SAMPLING-
+Sampling should not be used.
+
+-COMMGRAPH-
+Comm graph collects a communication graph that records, for each read and write
+to a shared location, what the accessing instruction, and the last writer are.
+The results are stored in a file when the program ends.  The file to store the
+graph in is specified via the CG_GRAPH environment variable.  The communication
+graph is useful for debugging (as with an automated debugging methodology like
+http://recon.cs.washington.edu).  The communication graph may also be useful
+for understanding program structure and performance tuning.
+
+-RRRW-
+RRRW traces, for each read and write to shared memory, the previous access to that location.  If an operation's previous access was in a different thread, the current operation is recorded.  The trace of such accesses reveals which parts of the program access data shared by multiple threads.  This is useful for performance tuning and debugging.
+
+-SLCOPTEXC-
+This flag is for debugging CTraps and is not important.
+
+
+=INSTRUMENTING YOUR PROGRAM=
+
+To enable instrumentation of shared memory accesses, add the following flag to
+your compilation command line:
+
+-fplugin=<install path>/RWInst.so
+
+where <install path> is the path where you built the CTraps compiler support
+(e.g., ${HOME}/CTraps-gcc/Compiler).
+
+Doing that will insert a call to MemRead(void *addr) before instrumented reads
+and will insert a call to MemWrite(void *addr) before instrumented writes. Note
+that if you've used RDTYPE=WRITEONLY, the compiler will only insert MemWrite
+calls.
+
+=RUNNING YOUR INSTRUMENTED PROGRAM=
+Be sure the runtime is built with the options you wanted.  Also be sure that
+CTraps-gcc/Runtime/libRWCalls.so is in your LD_LIBRARY_PATH.  If those two
+things are true, you should be able to run your program like normal and CTraps
+should make its instrumentation calls.
+
+-Using Plugins-
+A plugin to CTraps to be loaded is specified via the CTRAP_PLUGIN environment
+variable.  Plugins must expose the interface specified in
+CTraps-gcc/Runtime/ct_plugin.h.  See the readme in the plugins section for more
+information on how to write your own CTraps plugin.

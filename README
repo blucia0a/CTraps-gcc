@@ -1,7 +1,6 @@
-/*
-==Last Writer Slices & CTraps -- A GCC plugin and runtime system to track data provenance and interpose on shared data accesses==
+CTraps for GCC-4.8, as published at CGO 2015.
     
-    Copyright (C) 2012 Brandon Lucia 
+    Copyright (C) 2012-2014 Brandon Lucia blucia@cmu.edu
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,126 +14,44 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
-Last writer slices and CTraps (collectively "CTraps", for short) is a gcc
-plugin and runtime library that inserts calls to runtime library functions just
-before shared memory accesses in parallel/concurrent code.
+Build instructions for CGO Artifact Evaluation
+-----------------------------------------------
 
-The purpose of this plugin is to expose information about when and how threads
-communicate with one another to programmers for debugging and program
-analysis.  The overhead of the instrumentation and runtime code is
-very low -- often low enough for always-on use in production code.  In a series
-of initial experiments the overhead was 0-10% in several widely used server programs.
+This README will help you build the Last Writer Slices compiler pass and
+runtime, and test them both on an included example program.  The output of the
+test program shows the contents of the last writer table, which is the main
+contribution of the paper.  README.orig describes the advanced features of this
+system, such as how to build plugins (i.e., CTraps), and a few other features.
+For a basic artifact evaluation, the most important component is the LWS
+runtime described here.
 
-The provided runtime implementation has several modes:
+This package was built and tested on OS X Mavericks, with homebrew installed.  To build the project,
+there are a few prerequisites.
 
-1)Collect "last writer slices".  A Last writer slice is a table that shows,
-for each shared memory location in the program that was written, what thread
-and instruction last wrote it.  These are useful when debugging crashes.
-Last writer slices are stored in the program's memory map, so on a crash, 
-the last writer slices are preserved with the core dump.  Last writer slices
-can be collected very efficiently, so they can be collected during production
-runs with extremely low overhead (0-10% in many useful cases).
+1)Install homebrew (http://brew.sh/)
+2)$>brew install gcc48
 
-2)Expose "communication traps".  When exposing communication traps,
-CTraps collects last writer slices.  When an instrumented shared memory
-operation executes, its instrumentation looks at the last writer slice
-for the memory location being accessed.  If the last write was performed
-by a different thread, a special function called a "communication trap handler"
-is called.  Communication trap handlers are registered with the runtime
-at program startup.  A communication trap handler can execute arbitrary code.
-These handlers are only called when threads communicate with one another.  
-Communication is infrequent, so the overhead of these traps 
-is often low enough for use in production code.  The benefit of these traps
-is that a developer can: 1)dynamically profile thread sharing; 2)dynamically
-tune how threads interact to improve performance; 3)identify likely bugs
-manifesting as yet-unseen communication between threads.  There are likely
-many other uses for these traps as well.
+That will install g++-4.8, which is used to build the plugin.
 
-=BUILDING=
-To build, you should configure the paths in the Compiler/Makefile and
-Runtime/Makefile.  
+Homebrew changed the name of the libiberty.h header that is required by the plugin infrastructure. That means we need to symlink the renamed homebrew one to the original name using this command:
 
-There are some configurable build parameters for the Compiler and for the
-Runtime.
+$>ln -s `brew --prefix`/Cellar/gcc48/4.8.3/lib/gcc/x86_64-apple-darwin13.3.0/4.8.3/plugin/include/libiberty-4.8.h `brew --prefix`/Cellar/gcc48/4.8.3/lib/gcc/x86_64-apple-darwin13.3.0/4.8.3/plugin/include/libiberty.h
 
-For the compiler:
-There are three build configurations.  Each build configuration inserts
-instrumentation at different points in the program.  Which configuration gets
-built is determined by setting "RDTYPE" in the environment when you run make.
-(i.e., "RDTYPE=<value> make" in CTraps-gcc/Compiler). RDTYPE can take four
-different values:
+After that, things should build.
 
-if RDTYPE is undefined:
-   Instrumentation calls are inserted at all read and write operations. 
+$>cd Compiler; make
+$>cd ../Runtime; make
 
-if RDTYPE=WRITEONLY:
-   Instrumentation calls are inserted at write operations only.  This mode
-   collects last last writer slices, but does not support instrumentation on
-   reads.
+On my machine, this process produces a few bit-shift width warnings that are safe to ignore, but no other errors.
 
-if RDTYPE=DOMOPT:
-   Instrumentation calls are inserted at all write operations and all read
-   operations except those that are dominated in the control flow graph by other
-   points that are instrumented.
+The next thing to do is build and run the test program in Test/test.c
 
-if RDTYPE=SLCOPT:
-   Instrumentation calls are inserted at all write operations and all read 
-   operations except those that are in straight line code sequences with 
-   other points that are instrumented.
+$>cd ../Test; make; make run
 
-There are also several build configurations for the Runtime.  These are
-controlled by a series of #defines at the top of CTraps-gcc/Runtime/RWCalls.cpp.  
-Each different configuration enables different runtime features.
-
--PLUGIN-
-This #define enables use of the plugin framework in the runtime.  That means you
-can build a plugin (see the README in CTraps-gcc/Runtime/Plugins), load it, and
-it will be called when instrumented memory operations communicate.  
-
--SAMPLING-
-Sampling should not be used.
-
--COMMGRAPH-
-Comm graph collects a communication graph that records, for each read and write
-to a shared location, what the accessing instruction, and the last writer are.
-The results are stored in a file when the program ends.  The file to store the
-graph in is specified via the CG_GRAPH environment variable.  The communication
-graph is useful for debugging (as with an automated debugging methodology like
-http://recon.cs.washington.edu).  The communication graph may also be useful
-for understanding program structure and performance tuning.
-
--RRRW-
-RRRW traces, for each read and write to shared memory, the previous access to that location.  If an operation's previous access was in a different thread, the current operation is recorded.  The trace of such accesses reveals which parts of the program access data shared by multiple threads.  This is useful for performance tuning and debugging.
-
--SLCOPTEXC-
-This flag is for debugging CTraps and is not important.
-
-
-=INSTRUMENTING YOUR PROGRAM=
-
-To enable instrumentation of shared memory accesses, add the following flag to
-your compilation command line:
-
--fplugin=<install path>/RWInst.so
-
-where <install path> is the path where you built the CTraps compiler support
-(e.g., ${HOME}/CTraps-gcc/Compiler).
-
-Doing that will insert a call to MemRead(void *addr) before instrumented reads
-and will insert a call to MemWrite(void *addr) before instrumented writes. Note
-that if you've used RDTYPE=WRITEONLY, the compiler will only insert MemWrite
-calls.
-
-=RUNNING YOUR INSTRUMENTED PROGRAM=
-Be sure the runtime is built with the options you wanted.  Also be sure that
-CTraps-gcc/Runtime/libRWCalls.so is in your LD_LIBRARY_PATH.  If those two
-things are true, you should be able to run your program like normal and CTraps
-should make its instrumentation calls.
-
--Using Plugins-
-A plugin to CTraps to be loaded is specified via the CTRAP_PLUGIN environment
-variable.  Plugins must expose the interface specified in
-CTraps-gcc/Runtime/ct_plugin.h.  See the readme in the plugins section for more
-information on how to write your own CTraps plugin.
+This runs the test driver.  By default, the Last Writer Slices runtime is
+configured with #define ARTIFACTEVAL.  The effect of this is that each time the
+Last Writer Table is updated, the runtime prints the variable's address, thread
+ID, and program counter of the update.  Normally, this information would be
+accessible via gdb (or lldb), but for the sake of making evaluation easier,
+I've opted to display the output for the artifact evaluator.
